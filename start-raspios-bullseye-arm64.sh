@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Set the path to the RaspiOS Bullseye arm64 image
-IMAGE="2023-05-03-raspios-bullseye-arm64.img"
-IMAGE_QCOW2="2023-05-03-raspios-bullseye-arm64.qcow2"
+IMAGE="2023-05-03-raspios-bullseye-arm64-lite.img"
+IMAGE_QCOW2="${IMAGE}.qcow2"
 IMAGE_XZ="${IMAGE}.xz"
-URL="https://downloads.raspberrypi.org/raspios_arm64/images/raspios_arm64-2023-05-03/${IMAGE_XZ}"
+URL="https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2023-05-03/${IMAGE_XZ}"
 
 # Set the path to the QEMU ARM64 BIOS
 BIOS="/opt/homebrew/Cellar/qemu/8.0.0/share/qemu/edk2-aarch64-code.fd"
@@ -19,16 +19,16 @@ if [ ! -f "${IMAGE}" ]; then
   echo "Unpacking the image file..."
   if [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS
-    tar -xf "${IMAGE_XZ}"
+     xz -d "${IMAGE_XZ}"
   else
     # Linux
-    unxz "${IMAGE_XZ}"
+     unxz "${IMAGE_XZ}"
   fi
 fi
 
-# Convert the image to qcow2 format
+# Check if the qcow2 file exists and convert the image if it doesn't
 if [ ! -f "${IMAGE_QCOW2}" ]; then
-  echo "Converting the image to qcow2 format..."
+  echo "qcow2 file '${IMAGE_QCOW2}' not found. Converting the image to qcow2 format..."
   qemu-img convert -f raw -O qcow2 "${IMAGE}" "${IMAGE_QCOW2}"
 fi
 
@@ -54,6 +54,7 @@ qemu-system-aarch64 \
    -dtb bcm2710-rpi-3-b-plus.dtb \
    -m 1G -smp 4 -serial stdio \
    -kernel kernel8.img \
-   -sd ./2023-05-03-raspios-bullseye-arm64.qcow2 \
+   -sd $IMAGE_QCOW2 \
+   -display default \
    -append "rw earlyprintk loglevel=8 console=ttyAMA0,115200 dwc_otg.lpm_enable=0 root=/dev/mmcblk0p2 rootdelay=1" \
-   -device usb-mouse -device usb-kbd
+   -usb -device usb-kbd -device usb-mouse
