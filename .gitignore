@@ -1,3 +1,5 @@
 .idea
 *.xz
 *.img
+*.qcow2
+!kernel8.img
